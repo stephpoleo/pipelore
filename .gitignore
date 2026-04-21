@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+
+# ChromaDB (se regenera)
+chroma_db/
+
+# Claude Code
+.claude-config/
+.claude/settings.local.json
+.claude/*.local.json
+.claude/
+
+# Config local
+conf/
