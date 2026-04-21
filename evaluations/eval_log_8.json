@@ -1,0 +1,189 @@
+[
+  {
+    "version": "v0.3-confusion-matrix",
+    "timestamp": "2026-04-19T19:45:21.371407",
+    "config": {
+      "llm_model": "qwen2.5:7b",
+      "eval_model": "llama3.1:8b",
+      "safety_model": "llama-guard3:8b",
+      "embedding_model": "jinaai/jina-embeddings-v2-base-es",
+      "temperature": 0.0,
+      "max_tokens": 512,
+      "top_k": 7,
+      "distance_threshold": 0.85,
+      "faithfulness_threshold": 0.7,
+      "system_prompt": "Eres un asistente técnico del equipo de datos. Responde la pregunta usando únicamente la información del contexto proporcionado. Si la informacion no esta en el contexto, dilo explicitamente.No infieras ni deduzcas informacion que no este explicitamente en el contexto.Si solo tienes informacion parcial, menciona lo que tienes y aclara que falta. Cuando no tengas informacion, responde solo: 'No tengo informacion sobre esto en la documentacion disponible.' sin agregar explicaciones."
+    },
+    "metrics_summary": {
+      "faithfulness_avg": 0.7899999999999999,
+      "context_relevancy_avg": 0.4952380952380952,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "f1": 0.8,
+      "accuracy": 0.7333333333333333,
+      "confusion_matrix": {
+        "tp": 8,
+        "tn": 3,
+        "fp": 0,
+        "fn": 4
+      },
+      "latency_avg_ms": 15005.567453343732,
+      "latency_safety_avg_ms": 6592.141119996086,
+      "latency_retrieval_avg_ms": 34.407766679457076,
+      "latency_generation_avg_ms": 8379.018566668188
+    },
+    "per_question_results": [
+      {
+        "question": "¿Cuáles son las fuentes de datos del pipeline de bonos?",
+        "expected_answer": "Las fuentes son tablas Silver (ZECORE_SALESGOAL, ZECORE_EMPLOYEE, GETIN_STORE_VISITS, FILE_UPLOADER_POS_DAILY_GOAL), tablas Gold (ZESALES_PAYMENT_DEFINITION, DIM_BONO, RETAIL_LAST_YEAR_PAYMENT_DEFINITION) y File Uploaders (brazil_bonus_notes, brazil_bonus_multiplier, zecore_commissiontabulatorrange).",
+        "generated_answer": "Las fuentes de datos del pipeline de bonos son:\n\n- `SILVER.ZECORE_SALESGOAL` — metas de ventas por período y empleado\n- `GOLD.ZESALES_PAYMENT_DEFINITION` — hechos de ventas (fuente principal de cálculo de bonos)\n- `SILVER.GETIN_STORE_VISITS` — visitas a tienda, usadas para calcular CR y filtrar por uptime del sensor Getin\n- `SILVER.FILE_UPLOADER_POS_DAILY_GOAL` — metas diarias de CR y AOV por tienda\n- `file_uploader_brazil_bonus_notes` — tabla de notas por logro de ventas/AOV/CR para Brasil\n- `file_uploader_brazil_bonus_multiplier` — mapeo de nota total a multiplicador de comisión para Brasil\n- `zecore_commissiontabulatorrange` — rango de comisiones para México y Brasil\n\nEstas fuentes alimentan el cálculo de bonos tanto para México como para Brasil.",
+        "source_doc": "bonos.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.5714285714285714,
+        "classification": "TP",
+        "total_ms": 18123.467799974605
+      },
+      {
+        "question": "¿Con qué frecuencia se ejecuta el archivado de bonos?",
+        "expected_answer": "El archivado mensual corre como job programado el mes siguiente apuntando al mes anterior (idempotente). También se dispara automáticamente por trigger cuando se crea una nueva meta de ventas en zecore_merge_salesgoal.",
+        "generated_answer": "El archivado de bonos tiene dos frecuencias de ejecución:\n\n1. **Archivado por trigger**: Se dispara automáticamente desde `zecore_merge_salesgoal` cuando se crea una nueva meta de ventas.\n2. **Archivado mensual**: Es un job programado que corre el mes siguiente, apunta al mes anterior y salta si el dato ya existe (idempotente).",
+        "source_doc": "bonos.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.7142857142857143,
+        "classification": "TP",
+        "total_ms": 15031.449700065423
+      },
+      {
+        "question": "¿Qué tablas produce el pipeline de bonos como output?",
+        "expected_answer": "Produce GOLD.BONOS_RETAIL_SNAPSHOT, GOLD.RETAIL_BONOS_BRAZIL, GOLD.EMPLOYEE_BONUSES_HISTORY, GOLD.EMPLOYEE_COMMISSIONS_LEDGER y GOLD.COMMERCIAL_AND_ACCOUNTING_SALES.",
+        "generated_answer": "No tengo información sobre esto en la documentación disponible. El contexto proporcionado se centra en las fuentes de datos, transformaciones y entregables relacionados con los bonos y la post-venta, pero no menciona ningún pipeline específico de bonos y sus outputs.",
+        "source_doc": "bonos.md",
+        "faithfulness": 0.5,
+        "context_relevancy": 0.7142857142857143,
+        "classification": "FN",
+        "total_ms": 14460.424299992155
+      },
+      {
+        "question": "¿Cuánto paga el BONO_LUUNA por una orden de 150,000 pesos con IVA?",
+        "expected_answer": "Para una orden de 150k con IVA: $400 por los primeros 40k-100k, más $1,000 por los 100k adicionales (150k > 100k). Total: $1,400.",
+        "generated_answer": "Para calcular el bono `BONO_LUUNA` para una orden de 150,000 pesos con IVA, debemos seguir las reglas proporcionadas:\n\n- La base del bono es $400 para órdenes entre 40k y 100k (con IVA).\n- Para órdenes superiores a 100k (con IVA), se añade $1,000 por cada 100k adicional.\n\nDado que la orden es de 150,000 pesos con IVA, esto supera los 100k. La cantidad adicional sobre 100k es:\n\n\\[ 150,000 - 100,000 = 50,000 \\]\n\nComo cada 100k adicionales generan un bono de $1,000, para 50,000 pesos con IVA se proporciona la mitad:\n\n\\[ \\frac{1,000}{2} = 500 \\]\n\nPor lo tanto, el total del bono `BONO_LUUNA` para una orden de 150,000 pesos con IVA es:\n\n\\[ 400 + 500 = 900 \\]\n\n**Respuesta:** El BONO_LUUNA paga $900 por una orden de 150,000 pesos con IVA.",
+        "source_doc": "bonos.md",
+        "faithfulness": 0.6,
+        "context_relevancy": 0.14285714285714285,
+        "classification": "FN",
+        "total_ms": 19618.916200008243
+      },
+      {
+        "question": "¿Qué condiciones debe cumplir un empleado para recibir el BONO_GARANTIA?",
+        "expected_answer": "El empleado debe ser no-TEMPORAL, estar en su tienda original y dentro de los 30 días de ingreso. Paga $1,500 para Guru y $2,000 para Store Manager.",
+        "generated_answer": "Para recibir el BONO_GARANTIA, un empleado debe ser no-TEMPORAL en su tienda original y haber ingresado hace menos de 30 días. Además, se requiere que sea un Guru para obtener $1,500 o un Store Manager para obtener $2,000.",
+        "source_doc": "bonos.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.5714285714285714,
+        "classification": "TP",
+        "total_ms": 14245.140799961518
+      },
+      {
+        "question": "¿Cuántas tablas Silver alimentan la view de POS aftersales?",
+        "expected_answer": "13 tablas Silver alimentan la view, incluyendo ZECORE_POSAFTERSALESITEM (PASI), ZECORE_POSAFTERSALES (PAS), ZECORE_SHIPPINGCOREITEM, ZECORE_SHIPPINGRETURNITEM, entre otras.",
+        "generated_answer": "La view `GOLD.pos_aftersales` se alimenta directamente de 13 tablas SILVER. Estas son:\n\n- `SILVER.ZECORE_POSAFTERSALESITEM (PASI)`\n- `SILVER.ZECORE_POSAFTERSALES (PAS)`\n- `SILVER.ZECORE_SHIPPINGCOREITEM (SCI)`\n- `SILVER.ZECORE_SHIPPINGRETURNITEM (SRI)`\n- `SILVER.ZECORE_SHIPPINGRETURN (SR)`\n- `SILVER.ZECORE_DELIVERYNOTE (DN)`\n- `SILVER.ZECORE_DELIVERYNOTEITEM (DNI)`\n- `SILVER.ZECORE_SALESORDER (SO)`\n- `SILVER.ZECORE_SHIPPINGCORE (SC)`\n- `SILVER.ZECORE_POSAFTERSALESORDER (PASO)`\n- `SILVER.ZECORE_CASE`\n- `SILVER.ZECORE_EMPLOYEE`\n- `SILVER.ZECORE_DEPARTMENTMEMBERS`\n- `SILVER.ZECORE_SALESORDERITEM`",
+        "source_doc": "pos_aftersales.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.2857142857142857,
+        "classification": "TP",
+        "total_ms": 17817.290499981027
+      },
+      {
+        "question": "¿Qué es la regla de doble impacto en POS aftersales?",
+        "expected_answer": "Un ítem genera dos líneas de impacto cuando se cumplen tres condiciones: return_item_is_resellable = 0 (no revendible), shipping_state = 'Return Shipping', y case_type es 'Satisfaction warranty' o 'Product change'. Se agrega una línea resellable_cost con incoming_rate como costo.",
+        "generated_answer": "La regla de doble impacto en POS aftersales se activa cuando se cumplen las siguientes condiciones simultáneamente:\n- `return_item_is_resellable = 0` (el producto devuelto no es revendible)\n- `shipping_state = 'Return Shipping'`\n- `case_type` es 'Satisfaction warranty' o 'Product change'\n\nEn ese caso, se agrega una línea `resellable_cost` con `incoming_rate` como costo, clasificada como \"Gasto\".",
+        "source_doc": "pos_aftersales.md",
+        "faithfulness": 0.0,
+        "context_relevancy": 0.7142857142857143,
+        "classification": "FN",
+        "total_ms": 14592.26960001979
+      },
+      {
+        "question": "¿Con qué frecuencia se ejecuta el pipeline de POS aftersales?",
+        "expected_answer": "GOLD.pos_aftersales es una view que se calcula on-demand cada vez que se consulta. No hay job programado ni archivado periódico.",
+        "generated_answer": "No tengo información sobre la frecuencia de ejecución específica del pipeline de POS aftersales en el contexto proporcionado. Solo se menciona la frecuencia de ejecución para otras vistas y procesos relacionados, pero no se especifica directamente para `GOLD.pos_aftersales`.",
+        "source_doc": "pos_aftersales.md",
+        "faithfulness": 0.5,
+        "context_relevancy": 0.2857142857142857,
+        "classification": "FN",
+        "total_ms": 14574.760400049854
+      },
+      {
+        "question": "¿Cómo se resuelve el matching entre PASI y SRI en POS aftersales?",
+        "expected_answer": "Se usa una estrategia de dos pasos: primero un match exacto por shipping_core_item + item_code + rn, y luego un match fallback donde los PASI sin match exacto se parean con SRI no consumidos solo por item_code + rn dentro del mismo post-venta POS.",
+        "generated_answer": "El matching entre PASI (Post-Sale Item) y SRI (Shipping Return Item) en POS aftersales se resuelve en dos fases:\n\n1. **Match exacto**: Se parean los registros de PASI con SRI por `shipping_core_item + item_code + rn` (número de fila). Este paso captura datos limpios.\n\n2. **Match fallback**: Para aquellos PASI que no tienen match exacto, se parearán con SRI no consumidos solo por `item_code + rn` dentro del mismo post-venta POS. Este método maneja los casos donde los registros SRI pueden tener `from_shipping_core_item` parcial o nulo, asegurando que incluso en situaciones imperfectas, un match puede ser posible.",
+        "source_doc": "pos_aftersales.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.8571428571428571,
+        "classification": "TP",
+        "total_ms": 16734.669400029816
+      },
+      {
+        "question": "¿A qué hora se ejecuta el pipeline de prueba?",
+        "expected_answer": "El pipeline de prueba se ejecuta diariamente a las 03:00 UTC.",
+        "generated_answer": "El pipeline de prueba se ejecuta diariamente a las 03:00 UTC.",
+        "source_doc": "pipeline_test.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.14285714285714285,
+        "classification": "TP",
+        "total_ms": 13147.157900035381
+      },
+      {
+        "question": "¿Quién es el contacto del pipeline de prueba?",
+        "expected_answer": "El contacto es equipo-data@empresa.com.",
+        "generated_answer": "equipo-data@empresa.com",
+        "source_doc": "pipeline_test.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.5714285714285714,
+        "classification": "TP",
+        "total_ms": 12824.04790003784
+      },
+      {
+        "question": "¿Qué diferencia hay entre la frecuencia de ejecución del pipeline de bonos y el de POS aftersales?",
+        "expected_answer": "Las views de bonos (BONOS_RETAIL_SNAPSHOT, etc.) se calculan on-demand igual que POS aftersales. Pero bonos tiene además un archivado mensual programado y archivado por trigger, mientras que POS aftersales no tiene ningún job programado.",
+        "generated_answer": "No tengo información sobre esto en la documentación disponible.",
+        "source_doc": "bonos.md",
+        "faithfulness": 1.0,
+        "context_relevancy": 0.5714285714285714,
+        "classification": "TP",
+        "total_ms": 13312.055599992163
+      },
+      {
+        "question": "¿Cuál es el SLA de respuesta del pipeline de bonos?",
+        "expected_answer": "No hay información sobre SLA de respuesta del pipeline de bonos en la documentación disponible.",
+        "generated_answer": "No tengo información sobre esto en la documentación disponible.",
+        "source_doc": null,
+        "faithfulness": 0.75,
+        "context_relevancy": 0.0,
+        "classification": "TN",
+        "total_ms": 13620.604099996854
+      },
+      {
+        "question": "¿Cuántos empleados hay actualmente en el sistema de bonos?",
+        "expected_answer": "No hay información sobre la cantidad de empleados actuales en el sistema de bonos en la documentación disponible.",
+        "generated_answer": "No tengo información sobre cuántos empleados hay actualmente en el sistema de bonos. El contexto proporcionado no incluye detalles sobre la cantidad de empleados registrados o en el sistema.",
+        "source_doc": null,
+        "faithfulness": 0.5,
+        "context_relevancy": 0.5714285714285714,
+        "classification": "TN",
+        "total_ms": 13598.035399976652
+      },
+      {
+        "question": "¿Qué tecnología de orquestación usa el pipeline de bonos?",
+        "expected_answer": "No hay información sobre la tecnología de orquestación del pipeline de bonos en la documentación disponible.",
+        "generated_answer": "No tengo información sobre esto en la documentación disponible.",
+        "source_doc": null,
+        "faithfulness": 1.0,
+        "context_relevancy": 0.7142857142857143,
+        "classification": "TN",
+        "total_ms": 13383.222200034652
+      }
+    ],
+    "notes": "Reestructuración: precision/recall/F1 ahora con fórmula desde matriz de confusión. Se eliminó correctness (coseno). Faithfulness como métrica prioritaria."
+  }
+]
